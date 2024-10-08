@@ -1,0 +1,46 @@
+name: Deploy to Elastic Beanstalk
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy to Elastic Beanstalk
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+        run: |
+          pip install awsebcli
+          eb init -p node.js -r $AWS_REGION
+          eb deploy
+
+      - name: Update Instance Settings (IMDSv2 and RootVolumeType)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+        run: |
+          # Modify the EC2 instances in the Elastic Beanstalk environment
+          aws elasticbeanstalk update-environment --environment-name my-node-env --option-settings Namespace=aws:autoscaling:launchconfiguration,OptionName=RootVolumeType,Value=gp3
+          aws elasticbeanstalk update-environment --environment-name my-node-env --option-settings Namespace=aws:elasticbeanstalk:environment:process:default,OptionName=EnableIMDSv2,Value=true
+
