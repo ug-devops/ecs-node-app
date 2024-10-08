@@ -1,0 +1,26 @@
+{
+  "family": "ecs-node-app-task",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "ecs-node-app",
+      "image": "847109903209.dkr.ecr.us-east-1.amazonaws.com/my-node-app-repo:latest",
+      "memory": 512,
+      "cpu": 256,
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::847109903209:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc"
+}
+
