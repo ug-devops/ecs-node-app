@@ -3,41 +3,38 @@ name: Deploy to Elastic Beanstalk
 on:
   push:
     branches:
-      - main
+      - main  # or any other branch you want to trigger deployment from
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Deploy to Elastic Beanstalk
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
+      # Install AWS Elastic Beanstalk CLI (EB CLI)
+      - name: Install AWS EB CLI
         run: |
+          pip install --upgrade pip
           pip install awsebcli
-          eb init -p node.js -r $AWS_REGION
-          eb deploy
 
-      - name: Update Instance Settings (IMDSv2 and RootVolumeType)
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
+      # Set up AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Initialize Elastic Beanstalk project
+      - name: Initialize EB environment
         run: |
-          # Modify the EC2 instances in the Elastic Beanstalk environment
-          aws elasticbeanstalk update-environment --environment-name my-node-env --option-settings Namespace=aws:autoscaling:launchconfiguration,OptionName=RootVolumeType,Value=gp3
-          aws elasticbeanstalk update-environment --environment-name my-node-env --option-settings Namespace=aws:elasticbeanstalk:environment:process:default,OptionName=EnableIMDSv2,Value=true
+          eb init ${{ secrets.EB_APP_NAME }} --platform "Node.js" --region ${{ secrets.AWS_REGION }}
+          eb use ${{ secrets.EB_ENV_NAME }}
+
+      # Deploy the application
+      - name: Deploy to Elastic Beanstalk
+        run: |
+          eb deploy --staged
 
