@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: node-app
+  labels:
+    app: node-app
 spec:
   replicas: 1
   selector:
@@ -22,12 +24,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: node-app-service
+  labels:
+    app: node-app
 spec:
   selector:
     app: node-app
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 3000  # Adjust if your app uses a different port
-  type: LoadBalancer
+      port: 80          # The port you will use to access the app
+      targetPort: 3000   # Port where the container is running
+      nodePort: 30080    # Port on the local machine (kind cluster), can be any open port above 30000
+  type: NodePort
 
