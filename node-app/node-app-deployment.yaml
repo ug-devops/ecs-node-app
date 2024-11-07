@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: node-app
-          image: usman10p/ecs-node-app:latest  # Update with your specific tag if needed
+          image: usman10p/ecs-node-app:v2  # Update with your specific tag if needed
           ports:
             - containerPort: 3000  # Adjust if your app uses a different port
 ---
